@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="DebateX — Adaptive Multi-Agent AI Debate System with Reinforcement Learning">
+    <title>DebateX — AI Debate Arena</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- ── Animated Background ────────────────────────────── -->
+    <canvas id="bg-canvas"></canvas>
+
+    <!-- ── App Container ──────────────────────────────────── -->
+    <div id="app">
+
+        <!-- ── Auth Screen ────────────────────────────────── -->
+        <section id="auth-screen" class="screen active">
+            <div class="auth-container glass-card">
+                <div class="logo-section">
+                    <h1 class="logo">Debate<span class="logo-accent">X</span></h1>
+                    <p class="tagline">Adaptive Multi-Agent AI Debate System</p>
+                    <div class="tech-badges">
+                        <span class="badge">Reinforcement Learning</span>
+                        <span class="badge">NLP</span>
+                        <span class="badge">Q-Learning</span>
+                    </div>
+                </div>
+                <div id="auth-form-container">
+                    <div class="tab-switcher">
+                        <button class="tab-btn active" data-tab="login" id="login-tab-btn">Login</button>
+                        <button class="tab-btn" data-tab="register" id="register-tab-btn">Register</button>
+                    </div>
+                    <form id="login-form" class="auth-form">
+                        <div class="input-group">
+                            <input type="text" id="login-username" placeholder="Username" required>
+                            <div class="input-glow"></div>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="login-password" placeholder="Password" required>
+                            <div class="input-glow"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="login-btn">
+                            <span>Enter Arena</span>
+                            <div class="btn-shimmer"></div>
+                        </button>
+                    </form>
+                    <form id="register-form" class="auth-form hidden">
+                        <div class="input-group">
+                            <input type="text" id="reg-username" placeholder="Username" required minlength="3">
+                            <div class="input-glow"></div>
+                        </div>
+                        <div class="input-group">
+                            <input type="email" id="reg-email" placeholder="Email" required>
+                            <div class="input-glow"></div>
+                        </div>
+                        <div class="input-group">
+                            <input type="password" id="reg-password" placeholder="Password" required minlength="6">
+                            <div class="input-glow"></div>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="register-btn">
+                            <span>Create Account</span>
+                            <div class="btn-shimmer"></div>
+                        </button>
+                    </form>
+                    <p id="auth-error" class="error-msg hidden"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Dashboard Screen ───────────────────────────── -->
+        <section id="dashboard-screen" class="screen">
+            <nav class="top-nav glass-card">
+                <h2 class="nav-logo">Debate<span class="logo-accent">X</span></h2>
+                <div class="nav-links">
+                    <button class="nav-btn active" data-view="setup" id="nav-setup-btn">⚔️ New Debate</button>
+                    <button class="nav-btn" data-view="agents" id="nav-agents-btn">🤖 My Agents</button>
+                    <button class="nav-btn" data-view="history" id="nav-history-btn">📜 History</button>
+                    <button class="nav-btn" data-view="leaderboard" id="nav-leaderboard-btn">🏆 Leaderboard</button>
+                </div>
+                <div class="user-info">
+                    <span id="username-display" class="username"></span>
+                    <button class="btn btn-small" id="logout-btn">Logout</button>
+                </div>
+            </nav>
+
+            <!-- Setup View -->
+            <div id="setup-view" class="view active">
+                <div class="setup-container">
+                    <h2 class="section-title">⚔️ Configure Debate</h2>
+                    <div class="setup-grid">
+                        <div class="glass-card setup-card">
+                            <h3>Topic</h3>
+                            <div class="input-group">
+                                <input type="text" id="debate-topic" placeholder="e.g. AI will replace most jobs within 20 years" maxlength="500">
+                                <div class="input-glow"></div>
+                            </div>
+                            <div class="suggested-topics">
+                                <p class="label">Suggested:</p>
+                                <button class="topic-chip" data-topic="Artificial Intelligence will be a net positive for humanity">AI & Humanity</button>
+                                <button class="topic-chip" data-topic="Social media does more harm than good to society">Social Media</button>
+                                <button class="topic-chip" data-topic="Universal basic income should be implemented globally">UBI</button>
+                                <button class="topic-chip" data-topic="Space exploration is worth the investment">Space Exploration</button>
+                                <button class="topic-chip" data-topic="Privacy is more important than national security">Privacy vs Security</button>
+                            </div>
+                        </div>
+                        <div class="glass-card setup-card">
+                            <h3>Agent A <span class="pro-badge">PRO</span></h3>
+                            <select id="agent-a-select" class="select-input">
+                                <option value="">Select Agent A...</option>
+                            </select>
+                        </div>
+                        <div class="glass-card setup-card">
+                            <h3>Agent B <span class="con-badge">CON</span></h3>
+                            <select id="agent-b-select" class="select-input">
+                                <option value="">Select Agent B...</option>
+                            </select>
+                        </div>
+                        <div class="glass-card setup-card">
+                            <h3>Rounds</h3>
+                            <div class="rounds-slider">
+                                <input type="range" id="num-rounds" min="1" max="5" value="3">
+                                <span id="rounds-display" class="rounds-val">3</span>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-large" id="start-debate-btn">
+                        <span>🔥 Start Debate</span>
+                        <div class="btn-shimmer"></div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Agents View -->
+            <div id="agents-view" class="view">
+                <div class="agents-container">
+                    <div class="section-header">
+                        <h2 class="section-title">🤖 My Agents</h2>
+                        <button class="btn btn-primary" id="create-agent-btn">+ Create Agent</button>
+                    </div>
+                    <div id="agents-grid" class="agents-grid"></div>
+                </div>
+                <!-- Create Agent Modal -->
+                <div id="agent-modal" class="modal hidden">
+                    <div class="modal-content glass-card">
+                        <h3>Create New Agent</h3>
+                        <form id="create-agent-form">
+                            <div class="input-group">
+                                <input type="text" id="agent-name" placeholder="Agent Name" required>
+                            </div>
+                            <div class="input-group">
+                                <select id="agent-persona" class="select-input" required>
+                                    <option value="PHILOSOPHER">🏛️ Philosopher</option>
+                                    <option value="SCIENTIST">🔬 Scientist</option>
+                                    <option value="POLITICIAN">🏛️ Politician</option>
+                                    <option value="COMEDIAN">🎭 Comedian</option>
+                                    <option value="LAWYER">⚖️ Lawyer</option>
+                                    <option value="HISTORIAN">📚 Historian</option>
+                                </select>
+                            </div>
+                            <div class="slider-group">
+                                <label>Aggression: <span id="aggr-val">0.5</span></label>
+                                <input type="range" id="agent-aggression" min="0" max="1" step="0.1" value="0.5">
+                            </div>
+                            <div class="slider-group">
+                                <label>Logic Weight: <span id="logic-val">0.5</span></label>
+                                <input type="range" id="agent-logic" min="0" max="1" step="0.1" value="0.5">
+                            </div>
+                            <div class="slider-group">
+                                <label>Emotion Weight: <span id="emotion-val">0.3</span></label>
+                                <input type="range" id="agent-emotion" min="0" max="1" step="0.1" value="0.3">
+                            </div>
+                            <div class="slider-group">
+                                <label>Evidence Pref: <span id="evidence-val">0.5</span></label>
+                                <input type="range" id="agent-evidence" min="0" max="1" step="0.1" value="0.5">
+                            </div>
+                            <div class="modal-actions">
+                                <button type="button" class="btn btn-secondary" id="cancel-agent-btn">Cancel</button>
+                                <button type="submit" class="btn btn-primary">Create</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- History View -->
+            <div id="history-view" class="view">
+                <h2 class="section-title">📜 Debate History</h2>
+                <div id="history-list" class="history-list"></div>
+            </div>
+
+            <!-- Leaderboard View -->
+            <div id="leaderboard-view" class="view">
+                <h2 class="section-title">🏆 Agent Leaderboard</h2>
+                <div id="leaderboard-table-container" class="glass-card">
+                    <table id="leaderboard-table" class="leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th>Rank</th>
+                                <th>Agent</th>
+                                <th>Persona</th>
+                                <th>ELO</th>
+                                <th>Debates</th>
+                                <th>Win Rate</th>
+                                <th>Avg Score</th>
+                            </tr>
+                        </thead>
+                        <tbody id="leaderboard-body"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ── Debate Arena Screen ────────────────────────── -->
+        <section id="arena-screen" class="screen">
+            <div class="arena-header glass-card">
+                <button class="btn btn-small" id="back-to-dashboard-btn">← Back</button>
+                <div class="arena-info">
+                    <h2 id="arena-topic" class="arena-topic"></h2>
+                    <div class="round-indicator">
+                        Round <span id="current-round">1</span> / <span id="total-rounds">3</span>
+                    </div>
+                </div>
+                <div id="arena-status" class="arena-status">Preparing...</div>
+            </div>
+
+            <div class="arena-grid">
+                <!-- Agent A Side -->
+                <div class="arena-side side-a glass-card">
+                    <div class="side-header">
+                        <div class="agent-avatar pro">A</div>
+                        <div class="side-info">
+                            <h3 id="arena-agent-a-name">Agent A</h3>
+                            <span id="arena-agent-a-persona" class="persona-tag"></span>
+                            <span class="stance-badge pro-badge">PRO</span>
+                        </div>
+                        <div class="side-score">
+                            <span id="score-a" class="score-value">0</span>
+                            <span class="score-label">pts</span>
+                        </div>
+                    </div>
+                    <div id="arguments-a" class="arguments-container"></div>
+                    <div id="typing-a" class="typing-indicator hidden">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+
+                <!-- Center Judge Area -->
+                <div class="arena-center">
+                    <div class="judge-section glass-card">
+                        <div class="judge-icon">⚖️</div>
+                        <h4>AI Judge</h4>
+                        <div id="judge-analysis" class="judge-analysis"></div>
+                    </div>
+                    <div id="score-chart" class="score-chart glass-card">
+                        <canvas id="score-canvas" width="300" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Agent B Side -->
+                <div class="arena-side side-b glass-card">
+                    <div class="side-header">
+                        <div class="agent-avatar con">B</div>
+                        <div class="side-info">
+                            <h3 id="arena-agent-b-name">Agent B</h3>
+                            <span id="arena-agent-b-persona" class="persona-tag"></span>
+                            <span class="stance-badge con-badge">CON</span>
+                        </div>
+                        <div class="side-score">
+                            <span id="score-b" class="score-value">0</span>
+                            <span class="score-label">pts</span>
+                        </div>
+                    </div>
+                    <div id="arguments-b" class="arguments-container"></div>
+                    <div id="typing-b" class="typing-indicator hidden">
+                        <span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Overlay -->
+            <div id="results-overlay" class="results-overlay hidden">
+                <div class="results-card glass-card">
+                    <div id="winner-announcement" class="winner-announcement"></div>
+                    <div class="final-scores">
+                        <div class="final-score-item">
+                            <span id="result-agent-a"></span>
+                            <span id="result-score-a" class="final-score-value"></span>
+                        </div>
+                        <div class="vs-divider">VS</div>
+                        <div class="final-score-item">
+                            <span id="result-agent-b"></span>
+                            <span id="result-score-b" class="final-score-value"></span>
+                        </div>
+                    </div>
+                    <p id="final-verdict" class="final-verdict"></p>
+                    <button class="btn btn-primary btn-large" id="new-debate-btn">
+                        <span>🔥 New Debate</span>
+                    </button>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script src="main.js" type="module"></script>
+</body>
+</html>
