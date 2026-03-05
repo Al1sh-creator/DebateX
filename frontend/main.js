@@ -150,6 +150,9 @@ function setupEventListeners() {
         document.getElementById('results-overlay').classList.add('hidden');
         showScreen('dashboard-screen');
     });
+    document.getElementById('review-debate-btn').addEventListener('click', () => {
+        document.getElementById('results-overlay').classList.add('hidden');
+    });
 }
 
 // ── Screens ────────────────────────────────────────────────
@@ -437,15 +440,71 @@ async function pollDebateStatus(debateId) {
             const debate = await api(`/debates/${debateId}`);
             if (debate.status === 'COMPLETED') {
                 clearInterval(poll);
-                // Load rounds and scores
-                const rounds = await api(`/debates/${debateId}/rounds`);
-                const scores = await api(`/debates/${debateId}/scores`);
 
-                // Render any missing data
-                rounds.forEach(r => {
+                // Check if WebSocket already rendered the debate
+                const argsA = document.getElementById('arguments-a');
+                if (argsA && argsA.children.length > 0) {
+                    // WebSocket handled it, just show results if not already shown
+                    if (document.getElementById('results-overlay').classList.contains('hidden')) {
+                        showResults(debate);
+                    }
+                    return;
+                }
+
+                // WebSocket missed events — render rounds sequentially
+                const rounds = await api(`/debates/${debateId}/rounds`);
+
+                for (let i = 0; i < rounds.length; i++) {
+                    const r = rounds[i];
+
+                    // Show round banner
+                    showRoundBanner(r.roundNumber, debate.numRounds);
+                    await sleep(1800);
+                    hideRoundBanner();
+
+                    // Agent A typing
+                    showTyping('A', document.getElementById('arena-agent-a-name').textContent);
+                    await sleep(1500);
+                    hideTyping('A');
+
+                    // Agent A speaks
                     addArgument('A', r.agentAArgument, r.agentAStrategy, r.roundNumber);
+                    await sleep(2000);
+
+                    // Agent B typing
+                    showTyping('B', document.getElementById('arena-agent-b-name').textContent);
+                    await sleep(1500);
+                    hideTyping('B');
+
+                    // Agent B speaks
                     addArgument('B', r.agentBArgument, r.agentBStrategy, r.roundNumber);
-                });
+                    await sleep(2000);
+
+                    // Load and show scores for this round
+                    document.getElementById('arena-status').textContent = `⚖️ Judging Round ${r.roundNumber}...`;
+                    await sleep(1500);
+
+                    const scores = await api(`/debates/${debateId}/scores`);
+                    const roundScoresA = scores.filter(s => s.roundNumber === r.roundNumber);
+                    if (roundScoresA.length >= 2) {
+                        const sA = roundScoresA[0].totalScore;
+                        const sB = roundScoresA[1].totalScore;
+                        state.scores.a += Math.round(sA || 0);
+                        state.scores.b += Math.round(sB || 0);
+                        document.getElementById('score-a').textContent = state.scores.a;
+                        document.getElementById('score-b').textContent = state.scores.b;
+                        state.roundScores.push({ round: r.roundNumber, a: sA, b: sB });
+                        showJudgeOverlay(r.roundNumber, sA, sB,
+                            roundScoresA[0].feedback || '', roundScoresA[1].feedback || '', '');
+                        addJudgeEntry(r.roundNumber, '', sA, sB);
+                        drawScoreChart();
+                        await sleep(3500);
+                        hideJudgeOverlay();
+                    }
+
+                    document.getElementById('arena-status').textContent = 'Debate in progress...';
+                    await sleep(1000);
+                }
 
                 showResults(debate);
             }
@@ -455,22 +514,81 @@ async function pollDebateStatus(debateId) {
     setTimeout(() => clearInterval(poll), 300000); // Max 5 min
 }
 
+function sleep(ms) { return new Promise(resolve => setTimeout(resolve, ms)); }
+
+function showTyping(bot, name) {
+    const el = document.getElementById(`typing-${bot.toLowerCase()}`);
+    const label = document.getElementById(`typing-${bot.toLowerCase()}-label`);
+    if (label) label.textContent = `${name} is thinking...`;
+    el.classList.remove('hidden');
+
+    const container = document.getElementById(`arguments-${bot.toLowerCase()}`);
+    if (container) container.scrollTop = container.scrollHeight;
+}
+
+function hideTyping(bot) {
+    document.getElementById(`typing-${bot.toLowerCase()}`).classList.add('hidden');
+}
+
+function showRoundBanner(round, total) {
+    const banner = document.getElementById('round-banner');
+    document.getElementById('round-banner-text').textContent = `Round ${round}`;
+    document.querySelector('.round-banner-sub').textContent =
+        round === 1 ? 'Let the debate begin!' :
+            round === total ? 'Final round!' : 'Next round starting...';
+    banner.classList.remove('hidden');
+}
+
+function hideRoundBanner() {
+    document.getElementById('round-banner').classList.add('hidden');
+}
+
+function showJudgeOverlay(round, scoreA, scoreB, feedbackA, feedbackB, analysis) {
+    const overlay = document.getElementById('judge-overlay');
+    document.getElementById('judge-overlay-round').textContent = `Round ${round}`;
+    document.getElementById('judge-agent-a-name').textContent =
+        document.getElementById('arena-agent-a-name').textContent;
+    document.getElementById('judge-agent-b-name').textContent =
+        document.getElementById('arena-agent-b-name').textContent;
+    document.getElementById('judge-score-a').textContent = Math.round(scoreA);
+    document.getElementById('judge-score-b').textContent = Math.round(scoreB);
+    document.getElementById('judge-feedback-a').textContent = feedbackA || '';
+    document.getElementById('judge-feedback-b').textContent = feedbackB || '';
+    document.getElementById('judge-overlay-analysis').textContent = analysis || '';
+    overlay.classList.remove('hidden');
+}
+
+function hideJudgeOverlay() {
+    document.getElementById('judge-overlay').classList.add('hidden');
+}
+
 function handleDebateEvent(data) {
     const event = data.event;
 
     switch (event) {
         case 'round_start':
             document.getElementById('current-round').textContent = data.round;
-            document.getElementById('arena-status').textContent = `Round ${data.round} starting...`;
+            showRoundBanner(data.round, data.total || parseInt(document.getElementById('total-rounds').textContent));
+            // Auto-hide after WebSocket delay
+            setTimeout(() => hideRoundBanner(), 1400);
+            break;
+
+        case 'typing_start':
+            showTyping(data.bot, data.name || `Agent ${data.bot}`);
+            document.getElementById('arena-status').textContent =
+                `${data.name || 'Agent ' + data.bot} is crafting an argument...`;
             break;
 
         case 'turn_complete':
+            hideTyping(data.bot);
             addArgument(data.bot, data.content, data.strategy, data.round);
-            document.getElementById(`typing-${data.bot.toLowerCase()}`).classList.add('hidden');
+            document.getElementById('arena-status').textContent =
+                `${data.bot === 'A' ? document.getElementById('arena-agent-a-name').textContent :
+                    document.getElementById('arena-agent-b-name').textContent} has spoken.`;
             break;
 
         case 'judging':
-            document.getElementById('arena-status').textContent = `⚖️ Judging Round ${data.round}...`;
+            document.getElementById('arena-status').textContent = `⚖️ Judge is evaluating Round ${data.round}...`;
             break;
 
         case 'round_scored':
@@ -485,18 +603,34 @@ function handleDebateEvent(data) {
                 b: data.agent_b_total,
             });
 
+            // Show judge evaluation overlay
+            showJudgeOverlay(
+                data.round,
+                data.agent_a_total, data.agent_b_total,
+                data.feedback_a || '', data.feedback_b || '',
+                data.analysis || ''
+            );
+
             addJudgeEntry(data.round, data.analysis, data.agent_a_total, data.agent_b_total);
             drawScoreChart();
-            document.getElementById('arena-status').textContent = 'Debate in progress...';
+
+            // Auto-hide judge overlay after 3.5 seconds
+            setTimeout(() => {
+                hideJudgeOverlay();
+                document.getElementById('arena-status').textContent = 'Debate in progress...';
+            }, 3500);
             break;
 
         case 'debate_end':
-            showResults({
-                winner: data.winner,
-                totalScoreA: data.totalScoreA,
-                totalScoreB: data.totalScoreB,
-                finalVerdict: data.finalVerdict,
-            });
+            // Small delay to let judge overlay dismiss first
+            setTimeout(() => {
+                showResults({
+                    winner: data.winner,
+                    totalScoreA: data.totalScoreA,
+                    totalScoreB: data.totalScoreB,
+                    finalVerdict: data.finalVerdict,
+                });
+            }, 500);
             break;
 
         case 'error':
@@ -508,13 +642,17 @@ function handleDebateEvent(data) {
 function addArgument(bot, content, strategy, round) {
     const container = document.getElementById(`arguments-${bot.toLowerCase()}`);
     const formatStrategy = strategy ? strategy.replace(/_/g, ' ') : '';
+    const agentName = document.getElementById(`arena-agent-${bot.toLowerCase()}-name`)?.textContent || `Agent ${bot}`;
 
     const bubble = document.createElement('div');
     bubble.className = 'argument-bubble';
     bubble.innerHTML = `
-        <div class="argument-meta">
-            <span class="argument-strategy">${formatStrategy}</span>
-            <span class="argument-round">R${round}</span>
+        <div class="argument-header">
+            <span class="argument-agent-name">${agentName}</span>
+            <div class="argument-meta">
+                ${formatStrategy ? `<span class="argument-strategy">${formatStrategy}</span>` : ''}
+                <span class="argument-round">Round ${round}</span>
+            </div>
         </div>
         <p>${content}</p>
     `;

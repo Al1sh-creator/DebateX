@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,12 @@
     <title>DebateX — AI Debate Arena</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <!-- ── Animated Background ────────────────────────────── -->
     <canvas id="bg-canvas"></canvas>
@@ -95,16 +99,24 @@
                         <div class="glass-card setup-card">
                             <h3>Topic</h3>
                             <div class="input-group">
-                                <input type="text" id="debate-topic" placeholder="e.g. AI will replace most jobs within 20 years" maxlength="500">
+                                <input type="text" id="debate-topic"
+                                    placeholder="e.g. AI will replace most jobs within 20 years" maxlength="500">
                                 <div class="input-glow"></div>
                             </div>
                             <div class="suggested-topics">
                                 <p class="label">Suggested:</p>
-                                <button class="topic-chip" data-topic="Artificial Intelligence will be a net positive for humanity">AI & Humanity</button>
-                                <button class="topic-chip" data-topic="Social media does more harm than good to society">Social Media</button>
-                                <button class="topic-chip" data-topic="Universal basic income should be implemented globally">UBI</button>
-                                <button class="topic-chip" data-topic="Space exploration is worth the investment">Space Exploration</button>
-                                <button class="topic-chip" data-topic="Privacy is more important than national security">Privacy vs Security</button>
+                                <button class="topic-chip"
+                                    data-topic="Artificial Intelligence will be a net positive for humanity">AI &
+                                    Humanity</button>
+                                <button class="topic-chip"
+                                    data-topic="Social media does more harm than good to society">Social Media</button>
+                                <button class="topic-chip"
+                                    data-topic="Universal basic income should be implemented globally">UBI</button>
+                                <button class="topic-chip" data-topic="Space exploration is worth the investment">Space
+                                    Exploration</button>
+                                <button class="topic-chip"
+                                    data-topic="Privacy is more important than national security">Privacy vs
+                                    Security</button>
                             </div>
                         </div>
                         <div class="glass-card setup-card">
@@ -244,7 +256,8 @@
                     </div>
                     <div id="arguments-a" class="arguments-container"></div>
                     <div id="typing-a" class="typing-indicator hidden">
-                        <span></span><span></span><span></span>
+                        <span class="typing-label" id="typing-a-label">Thinking...</span>
+                        <div class="typing-dots"><span></span><span></span><span></span></div>
                     </div>
                 </div>
 
@@ -276,8 +289,45 @@
                     </div>
                     <div id="arguments-b" class="arguments-container"></div>
                     <div id="typing-b" class="typing-indicator hidden">
-                        <span></span><span></span><span></span>
+                        <span class="typing-label" id="typing-b-label">Thinking...</span>
+                        <div class="typing-dots"><span></span><span></span><span></span></div>
                     </div>
+                </div>
+            </div>
+
+            <!-- Round Transition Banner -->
+            <div id="round-banner" class="round-banner hidden">
+                <div class="round-banner-content">
+                    <span class="round-banner-icon">⚔️</span>
+                    <h2 id="round-banner-text">Round 1</h2>
+                    <p class="round-banner-sub">Get ready...</p>
+                </div>
+            </div>
+
+            <!-- Judge Evaluation Overlay -->
+            <div id="judge-overlay" class="judge-overlay hidden">
+                <div class="judge-overlay-card glass-card">
+                    <div class="judge-overlay-header">
+                        <span class="judge-overlay-icon">⚖️</span>
+                        <h3>Judge's Evaluation</h3>
+                        <span id="judge-overlay-round" class="judge-overlay-round">Round 1</span>
+                    </div>
+                    <div class="judge-scores-grid">
+                        <div class="judge-score-col agent-a-col">
+                            <h4 id="judge-agent-a-name">Agent A</h4>
+                            <div id="judge-score-a" class="judge-score-big">0</div>
+                            <p id="judge-feedback-a" class="judge-feedback"></p>
+                        </div>
+                        <div class="judge-score-divider">
+                            <span>VS</span>
+                        </div>
+                        <div class="judge-score-col agent-b-col">
+                            <h4 id="judge-agent-b-name">Agent B</h4>
+                            <div id="judge-score-b" class="judge-score-big">0</div>
+                            <p id="judge-feedback-b" class="judge-feedback"></p>
+                        </div>
+                    </div>
+                    <p id="judge-overlay-analysis" class="judge-overlay-analysis"></p>
                 </div>
             </div>
 
@@ -300,6 +350,10 @@
                     <button class="btn btn-primary btn-large" id="new-debate-btn">
                         <span>🔥 New Debate</span>
                     </button>
+                    <button class="btn btn-secondary" id="review-debate-btn"
+                        style="margin-top: 12px; display: block; margin-left: auto; margin-right: auto;">
+                        📜 Review Debate
+                    </button>
                 </div>
             </div>
         </section>
@@ -307,4 +361,5 @@
 
     <script src="main.js" type="module"></script>
 </body>
+
 </html>

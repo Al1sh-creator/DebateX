@@ -168,33 +168,47 @@ Do NOT use labels like "Argument:" or "Paragraph 1:" — just write the argument
 
 async def generate_argument_with_model(prompt: str) -> str:
     """
-    Generate argument text using HuggingFace transformers.
+    Generate argument text using Google Gemini API.
 
-    Uses a local text-generation model. Falls back to template-based
-    generation if model is not available.
+    Uses Gemini 2.0 Flash for fast, high-quality debate argument generation.
+    Falls back to template-based generation if API is unavailable.
     """
     try:
-        from transformers import pipeline
+        import os
+        from dotenv import load_dotenv
+        from google import genai
 
-        generator = pipeline(
-            "text-generation",
-            model="gpt2",
-            max_new_tokens=300,
-            temperature=0.9,
-            top_p=0.95,
-            do_sample=True,
-            pad_token_id=50256,
+        load_dotenv()
+        api_key = os.getenv("GEMINI_API_KEY")
+
+        if not api_key:
+            return _fallback_argument(prompt)
+
+        client = genai.Client(api_key=api_key)
+
+        response = client.models.generate_content(
+            model="gemini-2.0-flash",
+            contents=prompt,
+            config={
+                "temperature": 0.9,
+                "top_p": 0.95,
+                "max_output_tokens": 500,
+                "system_instruction": (
+                    "You are an AI debate agent. Generate compelling, specific, and well-structured "
+                    "debate arguments. Stay in character as the persona described. Write naturally "
+                    "without labels or headers. Be persuasive and reference the specific topic. "
+                    "Keep your response to 2-3 focused paragraphs."
+                ),
+            },
         )
-        result = generator(prompt, max_new_tokens=300, num_return_sequences=1)
-        generated = result[0]["generated_text"]
 
-        # Extract only the generated part (after the prompt)
-        if generated.startswith(prompt):
-            generated = generated[len(prompt):].strip()
+        if response and response.text and len(response.text.strip()) > 50:
+            return response.text.strip()
+        else:
+            return _fallback_argument(prompt)
 
-        return generated if len(generated) > 50 else _fallback_argument(prompt)
-
-    except Exception:
+    except Exception as e:
+        print(f"Gemini API error: {e}")
         return _fallback_argument(prompt)
 
 
