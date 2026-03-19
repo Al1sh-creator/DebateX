@@ -25,6 +25,7 @@ from agents.debate_agent import (
 )
 from agents.judge_agent import judge_round
 from agents.q_learning import QLearningEngine, compute_reward, encode_state
+from warmup import warmup_nlp
 
 
 # ── FastAPI App ──────────────────────────────────────────────
@@ -42,6 +43,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def startup_event():
+    """Warm up NLP models on startup."""
+    import asyncio
+    # Run warmup in a thread to not block the event loop
+    loop = asyncio.get_event_loop()
+    await loop.run_in_executor(None, warmup_nlp)
 
 
 # ── Endpoints ────────────────────────────────────────────────

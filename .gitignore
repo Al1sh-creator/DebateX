@@ -1,0 +1,27 @@
+# General / OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+
+# Backend (Java/Spring Boot)
+backend/target/
+backend/.project
+backend/.classpath
+backend/.settings/
+backend/debatex-db.mv.db
+backend/debatex-db.trace.db
+
+# Frontend (Node/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# AI Service (Python)
+ai-service/__pycache__/
+ai-service/venv/
+ai-service/.env
+ai-service/models/
+ai-service/output.txt
+ai-service/output_clean.txt
