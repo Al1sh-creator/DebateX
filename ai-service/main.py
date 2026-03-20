@@ -183,6 +183,25 @@ async def get_strategy_endpoint(request: GetStrategyRequest):
         raise HTTPException(status_code=500, detail=f"Strategy selection failed: {str(e)}")
 
 
+from models.schemas import SummaryRequest, SummaryResponse
+
+@app.post("/summarize-debate", response_model=SummaryResponse)
+async def summarize_debate_endpoint(request: SummaryRequest):
+    """
+    Generate a short 3-point summary for both agents' arguments.
+    """
+    try:
+        from agents.debate_agent import summarize_debate_with_model
+        summary_a, summary_b = await summarize_debate_with_model(request.topic, request.arguments)
+        return SummaryResponse(
+            summary_a=summary_a,
+            summary_b=summary_b,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Debate summary failed: {str(e)}")
+
+
+
 @app.get("/health")
 async def health():
     """Health check endpoint."""

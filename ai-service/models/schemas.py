@@ -146,3 +146,14 @@ class GetStrategyResponse(BaseModel):
     chosen_strategy: Strategy
     q_values: dict[str, float]
     was_exploration: bool
+
+
+# ── Summary Generation ───────────────────────────────────────
+
+class SummaryRequest(BaseModel):
+    topic: str
+    arguments: list[dict]
+
+class SummaryResponse(BaseModel):
+    summary_a: list[str]
+    summary_b: list[str]

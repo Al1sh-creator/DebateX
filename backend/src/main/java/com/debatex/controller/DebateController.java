@@ -43,4 +43,9 @@ public class DebateController {
     public ResponseEntity<List<ScoreResponse>> getDebateScores(@PathVariable Long id) {
         return ResponseEntity.ok(debateService.getDebateScores(id));
     }
+
+    @GetMapping("/{id}/summary")
+    public ResponseEntity<DebateSummaryResponse> getDebateSummary(@PathVariable Long id) {
+        return ResponseEntity.ok(debateService.getDebateSummary(id));
+    }
 }

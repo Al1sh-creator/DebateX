@@ -387,7 +387,38 @@ public class DebateService {
                                 .toList();
         }
 
+        @SuppressWarnings("unchecked")
+        public DebateSummaryResponse getDebateSummary(Long debateId) {
+                Debate debate = debateRepository.findById(debateId)
+                                .orElseThrow(() -> new RuntimeException("Debate not found"));
+
+                List<Round> rounds = roundRepository.findByDebateIdOrderByRoundNumber(debateId);
+                List<Map<String, Object>> arguments = new ArrayList<>();
+
+                for (Round r : rounds) {
+                        arguments.add(Map.of("agent", "A", "text", r.getAgentAArgument()));
+                        arguments.add(Map.of("agent", "B", "text", r.getAgentBArgument()));
+                }
+
+                WebClient client = WebClient.create(aiServiceUrl);
+                Map<String, Object> request = Map.of(
+                                "topic", debate.getTopic(),
+                                "arguments", arguments
+                );
+
+                Map<String, Object> response = callAiService(client, "/summarize-debate", request);
+
+                List<String> summaryA = (List<String>) response.getOrDefault("summary_a", List.of("No summary available."));
+                List<String> summaryB = (List<String>) response.getOrDefault("summary_b", List.of("No summary available."));
+
+                return DebateSummaryResponse.builder()
+                                .summaryA(summaryA)
+                                .summaryB(summaryB)
+                                .build();
+        }
+
         private DebateResponse toDebateResponse(Debate d) {
+
                 return DebateResponse.builder()
                                 .id(d.getId())
                                 .topic(d.getTopic())

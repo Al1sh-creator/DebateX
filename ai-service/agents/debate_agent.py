@@ -433,3 +433,59 @@ def _fallback_argument(prompt: str) -> str:
     closing = random.choice(closings.get(closing_round, closings[1]))
 
     return f"{opener}\n\n{body}\n\n{closing}"
+
+
+# ── Summarization ────────────────────────────────────────────────
+
+async def summarize_debate_with_model(topic: str, arguments: list[dict]) -> tuple[list[str], list[str]]:
+    import json
+    # Filter and format args
+    formatted_args = []
+    for arg in arguments:
+        formatted_args.append(f"Agent {arg.get('agent', 'Unknown')}: {arg.get('text', '')}")
+    
+    prompt = f"""Summarize the debate deeply but concisely. 
+TOPIC: "{topic}"
+
+ARGUMENTS:
+{chr(10).join(formatted_args)}
+
+Extract exactly 3 concise bullet points representing the strongest core points made by Agent A, and 3 for Agent B.
+Do not use markdown formatting like ** or *. Do not add any extra conversational text.
+Format precisely as follows:
+AGENT_A
+- Point 1
+- Point 2
+- Point 3
+AGENT_B
+- Point 1
+- Point 2
+- Point 3"""
+
+    raw_summary = await generate_argument_with_model(prompt)
+    
+    summary_a = []
+    summary_b = []
+    current_agent = None
+    
+    for line in raw_summary.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        if "AGENT_A" in line.upper():
+            current_agent = "A"
+        elif "AGENT_B" in line.upper():
+            current_agent = "B"
+        elif line.startswith("-"):
+            pt = line.lstrip("- ").strip()
+            if current_agent == "A":
+                summary_a.append(pt)
+            elif current_agent == "B":
+                summary_b.append(pt)
+                
+    # Fallback if parsing fails
+    if not summary_a: summary_a = ["Agent A argued their position effectively.", "Emphasized core values.", "Presented standard supporting evidence."]
+    if not summary_b: summary_b = ["Agent B challenged the premise well.", "Highlighted potential risks.", "Brought alternative perspectives."]
+    
+    return summary_a[:3], summary_b[:3]
+

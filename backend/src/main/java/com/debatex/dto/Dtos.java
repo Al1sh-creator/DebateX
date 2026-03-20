@@ -173,4 +173,13 @@ public class Dtos {
         private Integer totalUsers;
         private java.util.List<RankingResponse> topAgents;
     }
+
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class DebateSummaryResponse {
+        private java.util.List<String> summaryA;
+        private java.util.List<String> summaryB;
+    }
 }

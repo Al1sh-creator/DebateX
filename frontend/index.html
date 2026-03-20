@@ -347,13 +347,32 @@
                         </div>
                     </div>
                     <p id="final-verdict" class="final-verdict"></p>
-                    <button class="btn btn-primary btn-large" id="new-debate-btn">
-                        <span>🔥 New Debate</span>
-                    </button>
-                    <button class="btn btn-secondary" id="review-debate-btn"
-                        style="margin-top: 12px; display: block; margin-left: auto; margin-right: auto;">
-                        📜 Review Debate
-                    </button>
+                    
+                    <div id="summary-section" class="summary-section hidden" style="margin: 20px 0; padding: 15px; background: rgba(0, 0, 0, 0.2); border-radius: 8px; text-align: left;">
+                        <h4 style="margin-top: 0; color: var(--gold); text-align: center;">Debate Summary</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <div>
+                                <h5 id="summary-agent-a-title" style="color: var(--cyan); margin-bottom: 10px;">Agent A</h5>
+                                <ul id="summary-a-list" style="padding-left: 20px; font-size: 0.9em; opacity: 0.9; margin: 0;"></ul>
+                            </div>
+                            <div>
+                                <h5 id="summary-agent-b-title" style="color: var(--magenta); margin-bottom: 10px;">Agent B</h5>
+                                <ul id="summary-b-list" style="padding-left: 20px; font-size: 0.9em; opacity: 0.9; margin: 0;"></ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 15px; flex-wrap: wrap;">
+                        <button class="btn btn-secondary" id="short-review-btn">
+                            📝 Generate Short Review
+                        </button>
+                        <button class="btn btn-primary" id="new-debate-btn">
+                            <span>🔥 New Debate</span>
+                        </button>
+                        <button class="btn btn-secondary" id="review-debate-btn">
+                            📜 Review Transcript
+                        </button>
+                    </div>
                 </div>
             </div>
         </section>

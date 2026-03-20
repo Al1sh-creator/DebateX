@@ -153,6 +153,7 @@ function setupEventListeners() {
     document.getElementById('review-debate-btn').addEventListener('click', () => {
         document.getElementById('results-overlay').classList.add('hidden');
     });
+    document.getElementById('short-review-btn').addEventListener('click', handleShortReview);
 }
 
 // ── Screens ────────────────────────────────────────────────
@@ -390,6 +391,15 @@ async function handleStartDebate() {
         document.getElementById('arguments-b').innerHTML = '';
         document.getElementById('judge-analysis').innerHTML = '';
         document.getElementById('results-overlay').classList.add('hidden');
+        
+        document.getElementById('summary-section').classList.add('hidden');
+        const shortBtn = document.getElementById('short-review-btn');
+        if (shortBtn) {
+            shortBtn.classList.remove('hidden');
+            shortBtn.textContent = '📝 Generate Short Review';
+            shortBtn.disabled = false;
+        }
+
         document.getElementById('arena-status').textContent = 'Debate in progress...';
 
         showScreen('arena-screen');
@@ -697,9 +707,42 @@ function showResults(debate) {
     document.getElementById('result-score-b').style.color = 'var(--magenta)';
     document.getElementById('final-verdict').textContent = debate.finalVerdict || '';
 
+    // Reset summary section for new display
+    document.getElementById('summary-section').classList.add('hidden');
+    const shortBtn = document.getElementById('short-review-btn');
+    if (shortBtn) {
+        shortBtn.classList.remove('hidden');
+        shortBtn.textContent = '📝 Generate Short Review';
+        shortBtn.disabled = false;
+    }
+
     document.getElementById('arena-status').textContent = '✅ Debate Complete';
     overlay.classList.remove('hidden');
 }
+
+async function handleShortReview() {
+    if (!state.currentDebateId) return;
+    
+    const btn = document.getElementById('short-review-btn');
+    btn.textContent = '⏳ Generating...';
+    btn.disabled = true;
+    
+    try {
+        const summary = await api(`/debates/${state.currentDebateId}/summary`);
+        
+        document.getElementById('summary-a-list').innerHTML = summary.summaryA.map(p => `<li>${p}</li>`).join('');
+        document.getElementById('summary-b-list').innerHTML = summary.summaryB.map(p => `<li>${p}</li>`).join('');
+        
+        document.getElementById('summary-section').classList.remove('hidden');
+        btn.classList.add('hidden'); // Hide the button once generated
+    } catch (err) {
+        alert('Failed to generate summary: ' + err.message);
+        btn.textContent = '📝 Generate Short Review';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
 
 // ── Score Chart ────────────────────────────────────────────
 function drawScoreChart() {
